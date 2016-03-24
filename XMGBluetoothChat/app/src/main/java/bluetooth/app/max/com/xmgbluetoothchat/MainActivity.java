@@ -27,13 +27,17 @@ import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -60,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
     public static BluetoothSocket btSocket;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         searchLocalBTList();
         searchRemoteBTList();
+
     }
 
     @Override
@@ -119,6 +125,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
         mProgressDialog = new ProgressDialog(this);
         mProgressDialog.setMessage("正在读取设备...");
+
     }
 
     private void initBluetooth(){
@@ -188,6 +195,22 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private void searchRemoteBTList(){
         setTitle("正在扫描...");
         mSmoothProgressBar.setVisibility(View.VISIBLE);
+        //20秒后关闭搜索
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        setTitle("扫描完毕");
+                        mSmoothProgressBar.setVisibility(View.INVISIBLE);
+                        if (mBluetoothAdapter.isDiscovering()) {
+                            mBluetoothAdapter.cancelDiscovery();
+                        }
+                    }
+                });
+            }
+        }, 20 * 1000);
         // 如果正在搜索，就先取消搜索
         if (mBluetoothAdapter.isDiscovering()) {
             mBluetoothAdapter.cancelDiscovery();
